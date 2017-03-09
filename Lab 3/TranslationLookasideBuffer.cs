@@ -6,10 +6,22 @@ namespace Lab_3
 {
     internal interface ITranslationLookasideBuffer
     {
+        /// <summary>
+        /// Looks up an entry in the TLB
+        /// </summary>
+        /// <param name="virtualAddress">the virtual address to lookup</param>
+        /// <returns>the physical address corresponding to the given virtual address, or null if not present</returns>
         uint? LookupEntry(uint virtualAddress);
-        void AddEntry(uint virtualAddress, uint physicalAddress);
+        /// <summary>
+        /// Adds an entry to the TLB, possibly evicting and returning another entry
+        /// </summary>
+        /// <param name="virtualAddress">The virtual address to add</param>
+        /// <param name="physicalAddress">The corresponding physical address</param>
+        /// <returns>The </returns>
+        uint? AddEntry(uint virtualAddress, uint physicalAddress);
         void Flush();
     }
+
     internal class LRUTranslationLookasideBuffer : ITranslationLookasideBuffer
     {
         private class TLBEntry
@@ -52,16 +64,16 @@ namespace Lab_3
             return _tlb[virtualAddress].PhysicalAddress;
         }
 
-        public void AddEntry(uint virtualAddress, uint physicalAddress)
+        public uint? AddEntry(uint virtualAddress, uint physicalAddress)
         {
-            if (Size == 0) return;
+            if (Size == 0) return null;
             _tlb[virtualAddress] = new TLBEntry(physicalAddress, _timestep);
             _timestep++;
 
-            if (_tlb.Count > Size)
-            {
-                _tlb.Remove(_tlb.Min())
-            }
+            if (_tlb.Count <= Size) return null;
+            var evictedEntry = _tlb.Min(pair => pair.Value.Timestep);
+            _tlb.Remove(evictedEntry);
+            return evictedEntry;
         }
     }
 }
