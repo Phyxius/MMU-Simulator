@@ -16,8 +16,8 @@ namespace Lab_3
     /// </summary>
     internal struct PageTableKey
     {
-        uint PID;
-        ulong Address;
+        public uint PID;
+        public ulong Address;
     }
 
     /// <summary>
@@ -28,8 +28,8 @@ namespace Lab_3
     /// <typeparam name="T">The type of the page replacement policy's key</typeparam>
     internal struct PageTableEntry<T>
     {
-        bool Clean;
-        T ComparisonKey;
+        public bool Clean;
+        public T ComparisonKey;
     }
 
     /// <summary>
