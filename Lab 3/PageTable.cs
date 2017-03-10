@@ -6,6 +6,16 @@ namespace Lab_3
 {
     internal class PageTable<T>
     {
+        private readonly IPageReplacementPolicy<T> _replacementPolicy;
+        private readonly Dictionary<PageTableKey, PageTableEntry<T>> _pageTable;
+        public readonly uint FrameBits;
+
+        public PageTable(IPageReplacementPolicy<T> replacementPolicy, uint memorySize, uint frameSize)
+        {
+            _pageTable = new Dictionary<PageTableKey, PageTableEntry<T>>();
+            _replacementPolicy = replacementPolicy;
+            FrameBits = memorySize / FrameBits;
+        }
 
 
     }
@@ -28,7 +38,7 @@ namespace Lab_3
     /// <typeparam name="T">The type of the page replacement policy's key</typeparam>
     internal struct PageTableEntry<T>
     {
-        public bool Clean;
+        public bool Dirty;
         public T ComparisonKey;
     }
 

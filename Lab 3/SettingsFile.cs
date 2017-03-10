@@ -86,8 +86,6 @@ namespace Lab_3
         {
             return policy.ToString().ToUpper();
         }
-
-
     }
 
     /// <summary>
