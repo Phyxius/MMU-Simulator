@@ -7,6 +7,9 @@ using System.Linq;
 
 namespace Lab_3
 {
+    /// <summary>
+    /// Loads a settings file based on the lab's specified format.
+    /// </summary>
     internal static class SettingsFileLoader
     {
         private static readonly Regex SettingsValidationRegex = new Regex(@"(?<label>[a-z-]+): (?<value>[a-z0-9]+)");
@@ -20,6 +23,12 @@ namespace Lab_3
                     .ToDictionary(p => p.GetConfigName());
         }
 
+        /// <summary>
+        /// Loads the settings from the file at the specified path.
+        /// Throws FormatException for malformed settings files.
+        /// </summary>
+        /// <param name="path">The path of the file to load</param>
+        /// <returns>The Settings object containing the loaded settings</returns>
         public static Settings LoadFromFile(string path)
         {
             var lines = File.ReadLines(path);
@@ -77,6 +86,11 @@ namespace Lab_3
 
     internal static class PageReplacementPoliciesMethods
     {
+        /// <summary>
+        /// Gets the name of the policy as used in the settings file
+        /// </summary>
+        /// <param name="policy">this</param>
+        /// <returns>The settings file name of the policy</returns>
         public static string GetConfigName(this PageReplacementPolicies policy)
         {
             return policy.ToString().ToUpper();
@@ -85,7 +99,9 @@ namespace Lab_3
         
     }
 
-
+    /// <summary>
+    /// Represents the configurable options specifiable in the settings files.
+    /// </summary>
     internal struct Settings
     {
         public uint PhysicalMemorySize;
