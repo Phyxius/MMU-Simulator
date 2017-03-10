@@ -22,6 +22,10 @@ namespace Lab_3
         void Flush();
     }
 
+    /// <summary>
+    /// Implements a translation lookaside buffer using a Least-Recently-Used
+    /// page replacement policy
+    /// </summary>
     internal class LRUTranslationLookasideBuffer : ITranslationLookasideBuffer
     {
         private class TLBEntry
