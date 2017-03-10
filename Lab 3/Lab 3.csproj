@@ -6,4 +6,8 @@
     <AssemblyName>mmu</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>bin\Debug\netcoreapp1.1\</OutputPath>
+  </PropertyGroup>
+
 </Project>
