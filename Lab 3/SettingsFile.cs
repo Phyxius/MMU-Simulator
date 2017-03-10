@@ -13,13 +13,13 @@ namespace Lab_3
     internal static class SettingsFileLoader
     {
         private static readonly Regex SettingsValidationRegex = new Regex(@"(?<label>[a-z-]+): (?<value>[a-z0-9]+)");
-        private static readonly Dictionary<string, PageReplacementPolicies> PageReplacementPoliciesMapping;
+        private static readonly Dictionary<string, Settings.PageReplacementPolicies> PageReplacementPoliciesMapping;
 
         static SettingsFileLoader()
         {
             PageReplacementPoliciesMapping =
-                new List<PageReplacementPolicies>(
-                    (PageReplacementPolicies[])Enum.GetValues(typeof(PageReplacementPolicies)))
+                new List<Settings.PageReplacementPolicies>(
+                    (Settings.PageReplacementPolicies[])Enum.GetValues(typeof(Settings.PageReplacementPolicies)))
                     .ToDictionary(p => p.GetConfigName());
         }
 
@@ -63,7 +63,7 @@ namespace Lab_3
                         ret.DiskLatency = uint.Parse(value);
                         break;
                     case "logging-output":
-                        ret.LoggingOutput = 
+                        ret.LoggingOutput =
                             value == "on" ? true :
                             value == "off" ? false :
                             throw new FormatException();
@@ -74,15 +74,6 @@ namespace Lab_3
         }
     }
 
-    internal enum PageReplacementPolicies
-    {
-        Random,
-        LRU,
-        MRU,
-        LFU,
-        FIFO,
-        MFU
-    }
 
     internal static class PageReplacementPoliciesMethods
     {
@@ -91,12 +82,12 @@ namespace Lab_3
         /// </summary>
         /// <param name="policy">this</param>
         /// <returns>The settings file name of the policy</returns>
-        public static string GetConfigName(this PageReplacementPolicies policy)
+        public static string GetConfigName(this Settings.PageReplacementPolicies policy)
         {
             return policy.ToString().ToUpper();
         }
 
-        
+
     }
 
     /// <summary>
@@ -104,6 +95,15 @@ namespace Lab_3
     /// </summary>
     internal struct Settings
     {
+        internal enum PageReplacementPolicies
+        {
+            Random,
+            LRU,
+            MRU,
+            LFU,
+            FIFO,
+            MFU
+        }
         public uint PhysicalMemorySize;
         public uint FrameSize;
         public uint MemoryLatency;
