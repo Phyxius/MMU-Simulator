@@ -5,6 +5,9 @@ using System.Text.RegularExpressions;
 
 namespace Lab_3
 {
+    /// <summary>
+    /// Reperesents a memory reference; usually corresponds to a single line a trace file.
+    /// </summary>
     internal class MemoryReference
     {
         private readonly static Regex regex = new Regex(@"(<?pid>\d+) (<?type>[IWR]) (?<address>0x\d+)");
@@ -36,11 +39,20 @@ namespace Lab_3
         }
     }
 
+    /// <summary>
+    /// The types of memory accesses
+    /// </summary>
     internal enum MemoryAccessType
     {
         Read, Write, InstructionFetch
     }
 
+    /// <summary>
+    /// The classes of memory accesses.
+    /// Loads represent read operations, i.e. which do not set the 'dirty' flag
+    /// on the corresponding page.
+    /// Stores are write operations, i.e. which set the 'dirty' flag on the page.
+    /// </summary>
     internal enum MemoryAccessClass
     {
         Load, Store
@@ -48,6 +60,11 @@ namespace Lab_3
 
     internal static class MemoryAccessTypeExtensions
     {
+        /// <summary>
+        /// Converts a specific memory access type to its corresponding class.
+        /// </summary>
+        /// <param name="type">This</param>
+        /// <returns>The class of the operation</returns>
         internal static MemoryAccessClass GetAccessClass(this MemoryAccessType type)
         {
             switch(type)
