@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Lab_3
@@ -8,16 +9,157 @@ namespace Lab_3
     {
         private readonly IPageReplacementPolicy<T> _replacementPolicy;
         private readonly Dictionary<PageTableKey, PageTableEntry<T>> _pageTable;
+        private readonly bool[] _usedFrames;
         public readonly uint FrameBits;
+        public readonly uint OffsetBits;
+        public readonly uint MaxFrames;
+        public readonly uint MemorySize;
 
         public PageTable(IPageReplacementPolicy<T> replacementPolicy, uint memorySize, uint frameSize)
         {
             _pageTable = new Dictionary<PageTableKey, PageTableEntry<T>>();
             _replacementPolicy = replacementPolicy;
-            FrameBits = memorySize / FrameBits;
+            MaxFrames = memorySize / FrameBits;
+            FrameBits = (uint)Math.Log(MaxFrames, 2);
+            OffsetBits = (8 * sizeof(uint)) - FrameBits;
+            MemorySize = memorySize;
+            _usedFrames = new bool[MaxFrames];
         }
 
+        public uint GetPageNumber(uint address)
+        {
+            return address >> (int)OffsetBits;
+        }
 
+        public uint GetOffset(uint address)
+        {
+            //(~0u) is a string of all 1's the size of a uint
+            return ((~0u) >> (int)FrameBits) & address;
+        }
+
+        /// <summary>
+        /// Looks up the given address in the page table,
+        /// and (if found) returns the result of that lookup via a 
+        /// PageTableLookupResult.
+        /// If not found (i.e. page not resident), returns null.
+        /// </summary>
+        /// <param name="address">The virtual address to look up</param>
+        /// <param name="pid">The PID of the relevant process</param>
+        /// <returns>The reseult of the lookup, or null if not found</returns>
+        public PageTableLookupResult? LookupAddress(uint address, uint pid)
+        {
+            var key = new PageTableKey
+            {
+                PageNumber = GetPageNumber(address),
+                PID = pid
+            };
+            if (!_pageTable.ContainsKey(key)) return null;
+            TouchPage(key);
+            return new PageTableLookupResult(
+                GetPageNumber(address),
+                _pageTable[key].FrameNumber,
+                GetOffset(address));
+        }
+
+        /// <summary>
+        /// Sets the dirty flag on the page at the specified
+        /// address/PID
+        /// </summary>
+        /// <param name="address">the address of the page</param>
+        /// <param name="pid">the PID of the page</param>
+        public void SetPageDirty(uint address, uint pid)
+        {
+            var key = new PageTableKey
+            {
+                PageNumber = GetPageNumber(address),
+                PID = pid
+            };
+            var page = _pageTable[key];
+            page.Dirty = true;
+            _pageTable[key] = page;
+        }
+
+        /// <summary>
+        /// Inserts a page into the page table, including finding an open
+        /// frame and evicting another page if necessary.
+        /// </summary>
+        /// <param name="address">The virtual address of the page to insert</param>
+        /// <param name="pid">The PID of the owning process</param>
+        /// <returns></returns>
+        public PageTableInsertionResult? InsertPage(uint address, uint pid)
+        {
+            var key = new PageTableKey
+            {
+                PageNumber = GetPageNumber(address),
+                PID = pid
+            };
+            var freeFrame = _usedFrames.Select((val, i) => Tuple.Create(val, i))
+                .Where(t => !t.Item1)
+                .FirstOrDefault()?.Item2;
+            var entry = new PageTableEntry<T>();
+            if (freeFrame != null)
+            {
+                entry.FrameNumber = (uint)freeFrame.Value;
+                entry.ComparisonKey = _replacementPolicy.GetInitialKeyValue();
+                _pageTable[key] = entry;
+                _usedFrames[freeFrame.Value] = true;
+                return null;
+            }
+
+            var evictedPage  = _replacementPolicy.EvictPage(
+                _pageTable.ToDictionary(
+                    pair => pair.Key, 
+                    pair => pair.Value.ComparisonKey));
+            PageTableEntry<T> evictedEntry = _pageTable[evictedPage];
+            freeFrame = (int)evictedEntry.FrameNumber;
+            entry.FrameNumber = (uint)freeFrame.Value;
+            entry.ComparisonKey = _replacementPolicy.GetInitialKeyValue();
+            _pageTable.Remove(evictedPage);
+            _pageTable[key] = entry;
+            return new PageTableInsertionResult(evictedPage.PageNumber, evictedPage.PID, evictedEntry.Dirty);
+        }
+
+        private void TouchPage(PageTableKey key)
+        {
+            var oldEntry = _pageTable[key];
+            oldEntry.ComparisonKey = _replacementPolicy.TouchPage(oldEntry.ComparisonKey);
+            _pageTable[key] = oldEntry;
+        }
+    }
+
+    /// <summary>
+    /// The result of a page table lookup.
+    /// Includes the page number looked up, the offset of the page,
+    /// and the corresponding frame number
+    /// </summary>
+    internal struct PageTableLookupResult
+    {
+        public PageTableLookupResult(uint pageNumber, uint frameNumber, uint offset)
+        {
+            PageNumber = pageNumber;
+            FrameNumber = frameNumber;
+            Offset = offset;
+        }
+        public readonly uint PageNumber;
+        public readonly uint FrameNumber;
+        public readonly uint Offset;
+    }
+
+    /// <summary>
+    /// The result of a page table insertion. 
+    /// Contains the evicted page's number, PID, and whether or not it was dirty.
+    /// </summary>
+    internal struct PageTableInsertionResult
+    {
+        public PageTableInsertionResult(uint evictedPageNumber, uint evictedPagePID, bool evictedPageDirty)
+        {
+            EvictedPageNumber = evictedPageNumber;
+            EvictedPagePID = evictedPagePID;
+            EvictedPageDirty = evictedPageDirty;
+        }
+        public readonly uint EvictedPageNumber;
+        public readonly uint EvictedPagePID;
+        public readonly bool EvictedPageDirty;
     }
 
     /// <summary>
@@ -26,8 +168,14 @@ namespace Lab_3
     /// </summary>
     internal struct PageTableKey
     {
+        /// <summary>
+        /// The PID of the owning process
+        /// </summary>
         public uint PID;
-        public ulong Address;
+        /// <summary>
+        /// The number of the page
+        /// </summary>
+        public uint PageNumber;
     }
 
     /// <summary>
@@ -38,7 +186,18 @@ namespace Lab_3
     /// <typeparam name="T">The type of the page replacement policy's key</typeparam>
     internal struct PageTableEntry<T>
     {
+        /// <summary>
+        /// True if the page is "dirty", i.e. has been written to
+        /// </summary>
         public bool Dirty;
+        /// <summary>
+        /// The number of the corresponding phyiscal frame
+        /// </summary>
+        public uint FrameNumber;
+        /// <summary>
+        /// The key value used by the page replacement policy to decide
+        /// which page to evict
+        /// </summary>
         public T ComparisonKey;
     }
 

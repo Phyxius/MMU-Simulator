@@ -17,7 +17,7 @@ namespace Lab_3
         /// </summary>
         /// <param name="virtualAddress">The virtual address to add</param>
         /// <param name="physicalAddress">The corresponding physical address</param>
-        /// <returns>The </returns>
+        /// <returns>The evicted address, or null if no entry was evicted</returns>
         uint? AddEntry(uint virtualAddress, uint physicalAddress);
         void Flush();
     }
