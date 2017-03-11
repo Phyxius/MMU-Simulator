@@ -1,0 +1,2 @@
+# MMU Simulator
+This project is a Memory Management Unit (MMU) simulator, written as a programming lab for CS481 (Operating Systems). It simulates a 32-bit MMU with a 1 layer fully associative Translation Lookaside Buffer, complete with detailed access times and per-operation tracing. It uses `valgrind` memory traces as inputs. See [the lab assignment](aux_files/lab3.pdf) for details. 
