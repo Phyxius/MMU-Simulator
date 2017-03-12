@@ -14,8 +14,30 @@ namespace Lab_3
         uint GetMaxPages();
         uint GetPageNumber(uint address);
         uint GetOffset(uint address);
+        /// <summary>
+        /// Looks up the given address in the page table,
+        /// and (if found) returns the result of that lookup via a 
+        /// PageTableLookupResult.
+        /// If not found (i.e. page not resident), returns null.
+        /// </summary>
+        /// <param name="address">The virtual address to look up</param>
+        /// <param name="pid">The PID of the relevant process</param>
+        /// <returns>The reseult of the lookup, or null if not found</returns>
         PageTableLookupResult? LookupAddress(uint address, uint pid);
+        /// <summary>
+        /// Sets the dirty flag on the page at the specified
+        /// address/PID
+        /// </summary>
+        /// <param name="address">the address of the page</param>
+        /// <param name="pid">the PID of the page</param>
         void SetPageDirty(uint address, uint pid);
+        /// <summary>
+        /// Inserts a page into the page table, including finding an open
+        /// frame and evicting another page if necessary.
+        /// </summary>
+        /// <param name="address">The virtual address of the page to insert</param>
+        /// <param name="pid">The PID of the owning process</param>
+        /// <returns></returns>
         PageTableInsertionResult? InsertPage(uint address, uint pid);
     }
 
@@ -53,15 +75,6 @@ namespace Lab_3
             return ((~0u) >> (int)PageBits) & address;
         }
 
-        /// <summary>
-        /// Looks up the given address in the page table,
-        /// and (if found) returns the result of that lookup via a 
-        /// PageTableLookupResult.
-        /// If not found (i.e. page not resident), returns null.
-        /// </summary>
-        /// <param name="address">The virtual address to look up</param>
-        /// <param name="pid">The PID of the relevant process</param>
-        /// <returns>The reseult of the lookup, or null if not found</returns>
         public PageTableLookupResult? LookupAddress(uint address, uint pid)
         {
             var key = new PageTableKey
@@ -77,12 +90,6 @@ namespace Lab_3
                 GetOffset(address));
         }
 
-        /// <summary>
-        /// Sets the dirty flag on the page at the specified
-        /// address/PID
-        /// </summary>
-        /// <param name="address">the address of the page</param>
-        /// <param name="pid">the PID of the page</param>
         public void SetPageDirty(uint address, uint pid)
         {
             var key = new PageTableKey
@@ -95,13 +102,6 @@ namespace Lab_3
             _pageTable[key] = page;
         }
 
-        /// <summary>
-        /// Inserts a page into the page table, including finding an open
-        /// frame and evicting another page if necessary.
-        /// </summary>
-        /// <param name="address">The virtual address of the page to insert</param>
-        /// <param name="pid">The PID of the owning process</param>
-        /// <returns></returns>
         public PageTableInsertionResult? InsertPage(uint address, uint pid)
         {
             var key = new PageTableKey
