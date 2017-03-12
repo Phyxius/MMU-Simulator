@@ -5,25 +5,41 @@ using System.Text;
 
 namespace Lab_3
 {
-    internal class PageTable<T>
+    internal interface IPageTable
+    {
+        uint GetPageBits();
+        uint GetOffsetBits();
+        uint GetMaxFrames();
+        uint GetMemorySize();
+        uint GetMaxPages();
+        uint GetPageNumber(uint address);
+        uint GetOffset(uint address);
+        PageTableLookupResult? LookupAddress(uint address, uint pid);
+        void SetPageDirty(uint address, uint pid);
+        PageTableInsertionResult? InsertPage(uint address, uint pid);
+    }
+
+    internal class PageTable<T> : IPageTable
     {
         private readonly IPageReplacementPolicy<T> _replacementPolicy;
         private readonly Dictionary<PageTableKey, PageTableEntry<T>> _pageTable;
         private readonly bool[] _usedFrames;
-        public readonly uint FrameBits;
+        public readonly uint PageBits;
         public readonly uint OffsetBits;
         public readonly uint MaxFrames;
         public readonly uint MemorySize;
+        public readonly uint MaxPages;
 
         public PageTable(IPageReplacementPolicy<T> replacementPolicy, uint memorySize, uint frameSize)
         {
             _pageTable = new Dictionary<PageTableKey, PageTableEntry<T>>();
             _replacementPolicy = replacementPolicy;
-            MaxFrames = memorySize / FrameBits;
-            FrameBits = (uint)Math.Log(MaxFrames, 2);
-            OffsetBits = (8 * sizeof(uint)) - FrameBits;
+            MaxFrames = memorySize / frameSize;
+            OffsetBits = (uint)Math.Log(frameSize, 2);
+            PageBits = (8 * sizeof(uint)) - OffsetBits;
             MemorySize = memorySize;
             _usedFrames = new bool[MaxFrames];
+            MaxPages = (uint)1 << (int)PageBits;
         }
 
         public uint GetPageNumber(uint address)
@@ -34,7 +50,7 @@ namespace Lab_3
         public uint GetOffset(uint address)
         {
             //(~0u) is a string of all 1's the size of a uint
-            return ((~0u) >> (int)FrameBits) & address;
+            return ((~0u) >> (int)PageBits) & address;
         }
 
         /// <summary>
@@ -124,6 +140,31 @@ namespace Lab_3
             var oldEntry = _pageTable[key];
             oldEntry.ComparisonKey = _replacementPolicy.TouchPage(oldEntry.ComparisonKey);
             _pageTable[key] = oldEntry;
+        }
+
+        public uint GetPageBits()
+        {
+            return PageBits;
+        }
+
+        public uint GetOffsetBits()
+        {
+            return OffsetBits;
+        }
+
+        public uint GetMaxFrames()
+        {
+            return MaxFrames;
+        }
+
+        public uint GetMemorySize()
+        {
+            return MemorySize;
+        }
+
+        public uint GetMaxPages()
+        {
+            return MaxPages;
         }
     }
 

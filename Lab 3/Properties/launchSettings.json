@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Lab 3": {
+      "commandName": "Project",
+      "commandLineArgs": "test_data\\testcfg.txt test_data\\testtrace.txt"
+    }
+  }
+}

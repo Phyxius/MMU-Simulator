@@ -12,7 +12,7 @@ namespace Lab_3
     /// </summary>
     internal static class SettingsFileLoader
     {
-        private static readonly Regex SettingsValidationRegex = new Regex(@"(?<label>[a-z-]+): (?<value>[a-z0-9]+)");
+        private static readonly Regex SettingsValidationRegex = new Regex(@"(?<label>[a-z-]+): (?<value>\w+)");
         private static readonly Dictionary<string, Settings.PageReplacementPolicies> PageReplacementPoliciesMapping;
 
         static SettingsFileLoader()
@@ -70,7 +70,7 @@ namespace Lab_3
                         break;
                 }
             }
-            return new Settings();
+            return ret;
         }
     }
 
@@ -93,6 +93,7 @@ namespace Lab_3
     /// </summary>
     internal struct Settings
     {
+        public const decimal MilliToNanoRatio = 1000000m;
         internal enum PageReplacementPolicies
         {
             Random,
@@ -105,8 +106,16 @@ namespace Lab_3
         public uint PhysicalMemorySize;
         public uint FrameSize;
         public uint MemoryLatency;
+        public decimal MemoryLatencyMS
+        {
+            get { return MemoryLatency / MilliToNanoRatio; }
+        }
         public uint TLBSize;
         public uint TLBLatency;
+        public decimal TLBLatencyMS
+        {
+            get { return TLBLatency / MilliToNanoRatio; }
+        }
         public uint DiskLatency;
         public bool LoggingOutput;
         public PageReplacementPolicies PageReplacementPolicy;

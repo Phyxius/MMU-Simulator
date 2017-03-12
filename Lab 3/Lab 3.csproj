@@ -10,4 +10,16 @@
     <OutputPath>bin\Debug\netcoreapp1.1\</OutputPath>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Update="PageTable.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="test_data\testcfg.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

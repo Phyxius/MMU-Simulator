@@ -1,0 +1,8 @@
+physical-memory-size: 1073741824
+frame-size: 1024
+memory-latency: 100
+page-replacement: LRU
+tlb-size: 128
+tlb-latency: 20
+disk-latency: 10
+logging-output: off
