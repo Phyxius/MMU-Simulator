@@ -14,7 +14,7 @@ namespace Lab_3
 
             var settings = SettingsFileLoader.LoadFromFile(args[0]);
             var tlb = new LRUTranslationLookasideBuffer(settings.TLBSize);
-            var pageTable = createPageTable(settings);
+            var pageTable = CreatePageTable(settings);
             var debugLogging = settings.LoggingOutput;
             PrintPreSimulationOutput(settings, pageTable);
         }
@@ -36,7 +36,7 @@ namespace Lab_3
             Console.WriteLine("Logging: " + (s.LoggingOutput ? "on" : "off"));
         }
 
-        private static IPageTable createPageTable(Settings s)
+        private static IPageTable CreatePageTable(Settings s)
         {
             switch(s.PageReplacementPolicy)
             {
