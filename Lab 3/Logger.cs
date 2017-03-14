@@ -33,7 +33,16 @@ namespace Lab_3
             LogYesNo("TLB eviction", evictedPage != null);
             if (evictedPage != null) LogLine($"\tpage {evictedPage} evicted from TLB");
         }
-        public void LogMemoryEviction(uint pid, uint page, bool dirty) => LogLine(
+
+        public void LogMemoryEviction(PageTableInsertionResult? result)
+        {
+            LogYesNo("Main memory eviction", result != null);
+            if (result != null) LogEvictedPage(result.Value.EvictedPagePID, 
+                result.Value.EvictedPageNumber, 
+                result.Value.EvictedPageDirty);
+        }
+
+        private void LogEvictedPage(uint pid, uint page, bool dirty) => LogLine(
             $"\tProcess {pid} page {page} ({(dirty ? "dirty" : "clean")}) evicted from memory");
 
         public void LogPageFrame(uint page, uint frame) => LogLine($"\tpage {page} in frame {frame}");

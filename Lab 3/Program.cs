@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace Lab_3
 {
     public class Program
     {
+        private static bool Logging;
         public static void Main(string[] args)
         {
             if (args.Length != 2)
@@ -15,8 +19,56 @@ namespace Lab_3
             var settings = SettingsFileLoader.LoadFromFile(args[0]);
             var tlb = new LRUTranslationLookasideBuffer(settings.TLBSize);
             var pageTable = CreatePageTable(settings);
-            var debugLogging = settings.LoggingOutput;
+            var logger = new Logger { LoggingEnabled = settings.LoggingOutput };
             PrintPreSimulationOutput(settings, pageTable);
+
+            decimal totalLatencyMS = 0;
+            uint totalMemoryAccesses = 0;
+            uint previousPID = 0;
+            var processes = new Dictionary<uint, ProcessInfo>();
+            var trace = File.ReadLines(args[1])
+                .Select(MemoryReference.FromTraceLine);
+            foreach (var m in trace)
+            {
+                totalMemoryAccesses++;
+                if (!processes.ContainsKey(m.PID)) processes[m.PID] = new ProcessInfo();
+                processes[m.PID].TotalMemoryReferences++;
+                if (m.PID != previousPID) tlb.Flush();
+                uint pageNumber = pageTable.GetPageNumber(m.Address);
+                logger.LogReference(m.PID, m.AccessType, m.Address,
+                    pageNumber, pageTable.GetOffset(m.Address));
+                totalLatencyMS += settings.TLBLatencyMS;
+                uint? tlbResult = tlb.LookupEntry(pageNumber);
+                logger.LogTLBHit(tlbResult != null);
+                if (tlbResult != null)
+                {
+                    logger.LogPageFrame(pageNumber, tlbResult.Value);
+                    continue;
+                }
+                var lookupResult = pageTable.LookupAddress(m.Address, m.PID);
+                totalLatencyMS += settings.MemoryLatencyMS;
+                logger.LogPageFault(lookupResult != null);
+                uint? tlbInsertionResult;
+                if (lookupResult != null)
+                {
+                    if (m.AccessType.GetAccessClass() == MemoryAccessClass.Store) pageTable.SetPageDirty(pageNumber, m.PID);
+                    totalLatencyMS += settings.TLBLatencyMS;
+                    tlbInsertionResult = tlb.AddEntry(pageNumber, lookupResult.Value.FrameNumber);
+                    logger.LogTLBEviction(tlbInsertionResult);
+                    logger.LogPageFrame(lookupResult.Value.PageNumber, lookupResult.Value.FrameNumber);
+                    continue;
+                }
+                totalLatencyMS += settings.MemoryLatency;
+                var pageInsertionResult = pageTable.InsertPage(pageNumber, m.PID);
+                logger.LogMemoryEviction(pageInsertionResult);
+
+                lookupResult = pageTable.LookupAddress(m.Address, m.PID);
+                if (m.AccessType.GetAccessClass() == MemoryAccessClass.Store) pageTable.SetPageDirty(pageNumber, m.PID);
+                totalLatencyMS += settings.TLBLatencyMS;
+                tlbInsertionResult = tlb.AddEntry(pageNumber, lookupResult.Value.FrameNumber);
+                logger.LogTLBEviction(tlbInsertionResult);
+                logger.LogPageFrame(lookupResult.Value.PageNumber, lookupResult.Value.FrameNumber);
+            }
         }
 
 
@@ -38,12 +90,22 @@ namespace Lab_3
 
         private static IPageTable CreatePageTable(Settings s)
         {
-            switch(s.PageReplacementPolicy)
+            uint memorySize = s.PhysicalMemorySize;
+            uint frameSize = s.FrameSize;
+            switch (s.PageReplacementPolicy)
             {
                 case Settings.PageReplacementPolicies.FIFO:
-                    return new PageTable<uint>(new PageReplacementPolicies.FIFO(), s.PhysicalMemorySize, s.FrameSize);
+                    return new PageTable<uint>(new PageReplacementPolicies.FIFO(), memorySize, frameSize);
                 case Settings.PageReplacementPolicies.LRU:
-                    return new PageTable<uint>(new PageReplacementPolicies.LeastRecentlyUsed(), s.PhysicalMemorySize, s.FrameSize);
+                    return new PageTable<uint>(new PageReplacementPolicies.LeastRecentlyUsed(), memorySize, frameSize);
+                case Settings.PageReplacementPolicies.LFU:
+                    return new PageTable<uint>(new PageReplacementPolicies.LeastFrequentlyUsed(), memorySize, frameSize);
+                case Settings.PageReplacementPolicies.MFU:
+                    return new PageTable<uint>(new PageReplacementPolicies.MostFrequentlyUsed(), memorySize, frameSize);
+                case Settings.PageReplacementPolicies.MRU:
+                    return new PageTable<uint>(new PageReplacementPolicies.MostRecentlyUsed(), memorySize, frameSize);
+                case Settings.PageReplacementPolicies.Random:
+                    return new PageTable<object>(new PageReplacementPolicies.Random(), memorySize, frameSize);
                 default:
                     throw new NotImplementedException(s.PageReplacementPolicy.ToString());
             }

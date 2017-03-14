@@ -10,7 +10,7 @@ namespace Lab_3
     /// </summary>
     internal class MemoryReference
     {
-        private readonly static Regex regex = new Regex(@"(<?pid>\d+) (<?type>[IWR]) (?<address>0x\d+)");
+        private readonly static Regex regex = new Regex(@"(?<pid>\d+) (?<type>[IWR]) (?<address>0x[0-9A-Fa-f]+)");
         private readonly static Dictionary<string, MemoryAccessType> AccessTypeLookup = new Dictionary<string, MemoryAccessType>()
         {
             {"I", MemoryAccessType.InstructionFetch},
@@ -18,10 +18,10 @@ namespace Lab_3
             {"R", MemoryAccessType.Read}
         };
         public readonly uint PID;
-        public readonly ulong Address;
+        public readonly uint Address;
         public MemoryAccessType AccessType;
 
-        public MemoryReference(uint pid, ulong address, MemoryAccessType accessType)
+        public MemoryReference(uint pid, uint address, MemoryAccessType accessType)
         {
             PID = pid;
             Address = address;
@@ -34,7 +34,7 @@ namespace Lab_3
             if (!match.Success) throw new FormatException(traceLine);
             return new MemoryReference(
                 uint.Parse(match.Groups["pid"].Value), 
-                ulong.Parse(match.Groups["address"].Value), 
+                Convert.ToUInt32(match.Groups["address"].Value, 16), 
                 AccessTypeLookup[match.Groups["type"].Value]);
         }
     }
@@ -74,6 +74,26 @@ namespace Lab_3
                 case MemoryAccessType.Read:
                 case MemoryAccessType.InstructionFetch:
                     return MemoryAccessClass.Load;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Converts the memory access type to a friendly verb form for logging
+        /// </summary>
+        /// <param name="type">this</param>
+        /// <returns>The friendly verb form</returns>
+        internal static string GetFriendlyVerb(this MemoryAccessType type)
+        {
+            switch(type)
+            {
+                case MemoryAccessType.InstructionFetch:
+                    return "Instruction fetch from";
+                case MemoryAccessType.Read:
+                    return "Read from";
+                case MemoryAccessType.Write:
+                    return "Store to";
                 default:
                     throw new NotImplementedException();
             }
