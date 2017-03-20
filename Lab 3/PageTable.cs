@@ -44,7 +44,7 @@ namespace Lab_3
     {
         private readonly IPageReplacementPolicy<T> _replacementPolicy;
         private readonly Dictionary<PageTableKey, PageTableEntry<T>> _pageTable;
-        private readonly bool[] _usedFrames;
+        private uint nextFreeFrame = 0;
         public readonly uint PageBits;
         public readonly uint OffsetBits;
         public readonly uint MaxFrames;
@@ -59,7 +59,6 @@ namespace Lab_3
             OffsetBits = (uint)Math.Log(frameSize, 2);
             PageBits = (8 * sizeof(uint)) - OffsetBits;
             MemorySize = memorySize;
-            _usedFrames = new bool[MaxFrames];
             MaxPages = (uint)1 << (int)PageBits;
         }
 
@@ -108,16 +107,13 @@ namespace Lab_3
                 PageNumber = GetPageNumber(address),
                 PID = pid
             };
-            var freeFrame = _usedFrames.Select((val, i) => Tuple.Create(val, i))
-                .Where(t => !t.Item1)
-                .FirstOrDefault()?.Item2;
             var entry = new PageTableEntry<T>();
-            if (freeFrame != null)
+            if (nextFreeFrame < MaxFrames)
             {
-                entry.FrameNumber = (uint)freeFrame.Value;
+                entry.FrameNumber = nextFreeFrame;
                 entry.ComparisonKey = _replacementPolicy.GetInitialKeyValue();
                 _pageTable[key] = entry;
-                _usedFrames[freeFrame.Value] = true;
+                nextFreeFrame++;
                 return null;
             }
 
@@ -126,8 +122,8 @@ namespace Lab_3
                     pair => pair.Key, 
                     pair => pair.Value.ComparisonKey));
             PageTableEntry<T> evictedEntry = _pageTable[evictedPage];
-            freeFrame = (int)evictedEntry.FrameNumber;
-            entry.FrameNumber = (uint)freeFrame.Value;
+            var evictedFrame = evictedEntry.FrameNumber;
+            entry.FrameNumber = evictedFrame;
             entry.ComparisonKey = _replacementPolicy.GetInitialKeyValue();
             _pageTable.Remove(evictedPage);
             _pageTable[key] = entry;
