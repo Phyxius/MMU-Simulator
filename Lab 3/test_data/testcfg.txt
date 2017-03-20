@@ -1,4 +1,4 @@
-physical-memory-size: 1073741824
+physical-memory-size: 65536
 frame-size: 1024
 memory-latency: 100
 page-replacement: LRU
