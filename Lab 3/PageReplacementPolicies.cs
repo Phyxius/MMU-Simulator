@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Lab_3.PageReplacementPolicies
 {
@@ -15,9 +14,10 @@ namespace Lab_3.PageReplacementPolicies
     {
         public PageTableKey EvictPage(Dictionary<PageTableKey, T > pages)
         {
-            return (from pair in pages
-                   orderby pair.Value descending
-                   select pair.Key).First();
+            return pages
+                .OrderByDescending(pair => pair.Value)
+                .Select(pair => pair.Key)
+                .First();
         }
         public abstract T GetInitialKeyValue();
         public abstract T TouchPage(T prevKey);
@@ -33,9 +33,10 @@ namespace Lab_3.PageReplacementPolicies
     {
         public PageTableKey EvictPage(Dictionary<PageTableKey, T> pages)
         {
-            return (from pair in pages
-                   orderby pair.Value ascending
-                   select pair.Key).First();
+            return pages
+                .OrderBy(pair => pair.Value)
+                .Select(pair => pair.Key)
+                .First();
         }
         public abstract T GetInitialKeyValue();
         public abstract T TouchPage(T prevKey);
@@ -83,21 +84,14 @@ namespace Lab_3.PageReplacementPolicies
     /// <summary>
     /// Evicts the least frequently used pages
     /// </summary>
-    internal class LeastFrequentlyUsed : IPageReplacementPolicy<uint>
+    internal class LeastFrequentlyUsed : LeastPageReplacementPolicy<uint>
     {
-        public PageTableKey EvictPage(Dictionary<PageTableKey, uint> pages)
-        {
-            return (from pair in pages
-                   orderby pair.Value ascending
-                   select pair.Key).First();
-        }
-
-        public uint GetInitialKeyValue()
+        public override uint GetInitialKeyValue()
         {
             return 0;
         }
 
-        public uint TouchPage(uint prevKey)
+        public override uint TouchPage(uint prevKey)
         {
             return prevKey + 1;
         }
@@ -106,22 +100,16 @@ namespace Lab_3.PageReplacementPolicies
     /// <summary>
     /// Evicts the oldest pages
     /// </summary>
-    internal class FIFO : IPageReplacementPolicy<uint>
+    internal class FIFO : LeastPageReplacementPolicy<uint>
     {
         private uint _pageCounter = 0;
-        public PageTableKey EvictPage(Dictionary<PageTableKey, uint> pages)
-        {
-            return (from pair in pages
-                    orderby pair.Value
-                    select pair.Key).First();
-        }
 
-        public uint GetInitialKeyValue()
+        public override uint GetInitialKeyValue()
         {
             return _pageCounter++;
         }
 
-        public uint TouchPage(uint prevKey)
+        public override uint TouchPage(uint prevKey)
         {
             return prevKey;
         }

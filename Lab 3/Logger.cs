@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Lab_3
 {
@@ -22,7 +20,7 @@ namespace Lab_3
             LogLine($"Process[{pid}]: {type.GetFriendlyVerb()} 0x{address.ToString("X")} (page: {page}, offset: {offset})");
         }
 
-        private void LogYesNo(string description, bool yesno, string prefix = "\t")  => LogLine(prefix + description + "? " + (yesno ? "yes" : "no"));
+        private void LogYesNo(string description, bool yesno, string prefix = "\t")  => LogLine($"{prefix}{description}? {(yesno ? "yes" : "no")}");
 
         public void LogTLBHit(bool hit) => LogYesNo("TLB hit", hit);
 
