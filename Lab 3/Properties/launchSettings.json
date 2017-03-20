@@ -2,7 +2,7 @@
   "profiles": {
     "Lab 3": {
       "commandName": "Project",
-      "commandLineArgs": "test_data\\testcfg.txt test_data\\testtrace.txt"
+      "commandLineArgs": "test_data\\testcfg.txt test_data\\random_short.txt"
     }
   }
 }

@@ -5,4 +5,4 @@ page-replacement: LRU
 tlb-size: 128
 tlb-latency: 20
 disk-latency: 10
-logging-output: on
+logging-output: off
