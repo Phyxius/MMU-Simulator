@@ -112,7 +112,7 @@ namespace Lab_3
             Console.WriteLine(pid == null ? "Overall" : $"Process {pid.Value}");
             Console.WriteLine($"\tMemory references: {info.TotalMemoryReferences}");
             Console.WriteLine($"\tTLB misses: {info.TLBMisses}");
-            Console.WriteLine($"\tPage faults: {info.CleanEvictions}");
+            Console.WriteLine($"\tPage faults: {info.PageFaults}");
             Console.WriteLine($"\tClean evictions: {info.CleanEvictions}");
             Console.WriteLine($"\tDirty evictions: {info.DirtyEvictions}");
             Console.WriteLine($"Percentage dirty evictions: {info.PercentageDirtyEvictions.ToString("0.00")}%");
