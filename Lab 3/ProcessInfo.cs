@@ -7,12 +7,16 @@
         public uint PageFaults;
         public uint CleanEvictions;
         public uint DirtyEvictions;
+        public decimal TotalEvictions
+        {
+            get { return CleanEvictions + DirtyEvictions; }
+        }
         public decimal PercentageDirtyEvictions
         {
             get
             {
-                if (CleanEvictions + DirtyEvictions == 0) return 0;
-                return DirtyEvictions / (DirtyEvictions + CleanEvictions);
+                if (TotalEvictions == 0) return 0;
+                return DirtyEvictions / TotalEvictions * 100;
             }
         }
 
