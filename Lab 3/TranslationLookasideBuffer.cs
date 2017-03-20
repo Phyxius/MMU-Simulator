@@ -75,9 +75,9 @@ namespace Lab_3
             _timestep++;
 
             if (_tlb.Count <= Size) return null;
-            var evictedEntry = _tlb.Min(pair => pair.Value.Timestep);
-            _tlb.Remove(evictedEntry);
-            return evictedEntry;
+            var evictedKey = _tlb.OrderBy(pair => pair.Key).First().Key;
+            _tlb.Remove(evictedKey);
+            return evictedKey;
         }
     }
 }
